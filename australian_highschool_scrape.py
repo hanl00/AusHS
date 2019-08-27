@@ -6,7 +6,7 @@ import time
 import timeit
 
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, NavigableString
 from fake_useragent import UserAgent
 from selenium import webdriver
 from unidecode import unidecode
@@ -26,7 +26,8 @@ Homepage = 'https://www.goodschools.com.au'
 user = UserAgent().random
 headers = {'User-Agent': user}
 
-def collect_school_links(str_link):
+#obtaining links for all the institutions by region
+def collect_institution_links(str_link):
 
     with open(uniqueLinkList_path, 'wt',encoding='utf-8', newline='') as Linklist:
         writer2 = csv.writer(Linklist)
@@ -61,4 +62,37 @@ def collect_school_links(str_link):
                 break
 
 
-collect_school_links("https://www.goodschools.com.au/compare-schools/search?state=ACT")
+#multiprocessing structure
+def multi_pool(func, input_name_list, procs):
+    templist = []
+    # counter = len(input_name_list)
+    pool = multiprocessing.Pool(processes=procs)
+    # print('Total number of processes: ' + str(procs))
+    for a in pool.imap(func, input_name_list):
+        templist.append(a)
+        # print('Number of links left: ' + str(counter - len(templist)))
+    pool.terminate()
+    pool.join()
+    return templist
+
+
+#retrieving all relevant information from the institution's profile page
+def collect_institution_data(str_institution_link):
+
+    #array structure = [ PRINCIPLE NAME,
+    complete_school_details = ['']
+    options.add_argument(f'user-agent={user}')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--headless')
+    driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\Nicholas\Documents\Summer intern @ Seeka\chromedriver.exe')
+    driver.get(str_institution_link)  # This will open the page using the URL
+    soup = BeautifulSoup(driver.page_source, 'lxml')
+    x = soup.find('div', class_='box border-grey')
+    for contents in x:
+        try:
+            print(contents.get_text())
+        except NavigableString:
+            pass
+
+
+collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Deakin-2600/alfred-deakin-high-school")
