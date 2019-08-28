@@ -71,19 +71,36 @@ def multi_pool(func, input_name_list, procs):
 #retrieving all relevant information from the institution's profile page
 def collect_institution_data(str_institution_link):
     complete_school_details = {}
+    page = requests.get(str_institution_link)
+    soup = BeautifulSoup(page.content, 'lxml')
 
     # begin by obtaining data from the top right box
     # - Sector, Government, Gender, Religion (found in some listings)
-    page = requests.get(str_institution_link)
-    soup = BeautifulSoup(page.content, 'lxml')
-    x = soup.find('div', class_='box-content box-section-padding').findAll('p')
-    for p_tags in x:
+    for p_tags in soup.find('div', class_='box-content box-section-padding').findAll('p'):
         cleaned_text = p_tags.getText().replace(" ", "").replace("\n", "")
         sorted_text = re.findall('([A-Z][a-z]*)', cleaned_text)
         complete_school_details[sorted_text[0]] = sorted_text[1]
-        #print(type(sorted_text), sorted_text)
+
+
+    #obtaining data from the right mid box
+    # - Principal, Addresses, Tel, Links to school's website
+    for p_tags in soup.find('div', class_='box border-grey').findAll('p'):
+        links = p_tags.findAll('a')
+        for a in links:
+            if a.getText() == "Visit school's website":
+                complete_school_details["Visit school's website"] = a['href']
+
+        cleaned_text = p_tags.getText() .replace("\n", "")
+        sorted_text = cleaned_text.split(":")
+        if len(sorted_text) == 2:
+            complete_school_details[sorted_text[0]] = sorted_text[1].lstrip().rstrip()
 
     print(complete_school_details)
 
 
-collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Deakin-2600/alfred-deakin-high-school")
+
+
+
+
+
+collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Yangan-4371/yangan-state-school")
