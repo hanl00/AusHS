@@ -31,15 +31,7 @@ def collect_institution_links(str_link):
 
     with open(uniqueLinkList_path, 'wt',encoding='utf-8', newline='') as Linklist:
         writer2 = csv.writer(Linklist)
-        # options.add_argument(f'user-agent={user}')
-        # options.add_argument('--disable-gpu')
-        # options.add_argument('--headless')
-        # driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\Nicholas\Documents\Summer intern @ Seeka\chromedriver.exe')
         search_result_page = requests.get(str_link)  # This will open the page using the URL
-
-    # content = driver.page_source.encode('utf-8').strip()
-    # page = requests.get(str_link, timeout=10, headers=headers)
-    # soup = BeautifulSoup(page.text, "lxml")
 
         total_link_info = ['']
 
@@ -78,26 +70,20 @@ def multi_pool(func, input_name_list, procs):
 
 #retrieving all relevant information from the institution's profile page
 def collect_institution_data(str_institution_link):
-    list = []
-    #array structure = [ PRINCIPLE NAME,
-    complete_school_details = ['']
-    #options.add_argument(f'user-agent={user}')
-    #options.add_argument('--disable-gpu')
-    #options.add_argument('--headless')
-    #driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\Nicholas\Documents\Summer intern @ Seeka\chromedriver.exe')
-    page = requests.get(str_institution_link)  # This will open the page using the URL
+    complete_school_details = {}
+
+    # begin by obtaining data from the top right box
+    # - Sector, Government, Gender, Religion (found in some listings)
+    page = requests.get(str_institution_link)
     soup = BeautifulSoup(page.content, 'lxml')
     x = soup.find('div', class_='box-content box-section-padding').findAll('p')
     for p_tags in x:
-        temp = p_tags.getText()
-        new = temp.replace(" ", "")
-        for alphabet in new:
-            if alphabet != "\n":
-                print(alphabet)
+        cleaned_text = p_tags.getText().replace(" ", "").replace("\n", "")
+        sorted_text = re.findall('([A-Z][a-z]*)', cleaned_text)
+        complete_school_details[sorted_text[0]] = sorted_text[1]
+        #print(type(sorted_text), sorted_text)
 
-        #print(len(temp), temp)
-        #print(len(new), new)
-        print("dfdfvkjdfvnbodfhbvf")
+    print(complete_school_details)
 
 
 collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Deakin-2600/alfred-deakin-high-school")
