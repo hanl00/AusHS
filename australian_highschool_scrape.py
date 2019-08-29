@@ -122,16 +122,39 @@ def collect_institution_data(str_institution_link):
     y = soup.find('div', class_='tab-pane active').find_all('p',  recursive=False)
     for p_tags in y:
         #p_tags.get_text()
-        about_us_list.append(p_tags.get_text().replace("\n", "").replace("\t", ""))
-    print(about_us_list)
+        sentences = p_tags.get_text().replace("\n", "").replace("\t", "").split(".")
+        words = list(filter(None, sentences))
+        for word in words:
+            cleaned_sentence = word.lstrip().rstrip()
+            about_us_list.append(cleaned_sentence)
+    about_us_string = ". ".join(about_us_list)
+    complete_school_details['About Us'] = about_us_string
+
+    # about us - KEY FACTS section
+    key_facts_list = []
+    w = soup.find_all('div', class_='col-md-4 col-sm-4 col-xs-6 text-align-center')
+    actual_list = w[:len(w)//2]
+    for facts in actual_list:
+        cleaned_text = facts.get_text().splitlines()
+        words = list(filter(None, cleaned_text))
+        #perform l and rstrip
+        if len(words)>2:
+            num_students_list = ". ".join(words[1:])
+            print(num_students_list)
+
+        print(words)
+
+    #print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
-
+# https://www.goodschools.com.au/compare-schools/in-Bargara-4670/bargara-state-school
+# https://www.goodschools.com.au/compare-schools/in-Arundel-4214/ab-paterson-college
+# https://www.goodschools.com.au/compare-schools/in-ManlyWest-4179/moreton-bay-boys-college
 
 if __name__ == '__main__':
     # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school")
+    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Brisbane-4000/all-hallows-school")
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
