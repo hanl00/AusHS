@@ -91,20 +91,20 @@ def collect_institution_data(str_institution_link):
 
     # proceed to obtain data from the top right box
     # - Sector, Government, Gender, Religion (found in some listings)
-    for p_tags in soup.find('div', class_='box-content box-section-padding').findAll('p'):
-        cleaned_text = p_tags.getText().replace(" ", "").replace("\n", "")
+    for p_tags in soup.find('div', class_='box-content box-section-padding').find_all('p'):
+        cleaned_text = p_tags.get_text().replace(" ", "").replace("\n", "")
         sorted_text = re.findall('([A-Z][a-z]*)', cleaned_text)
         complete_school_details[sorted_text[0]] = sorted_text[1]
 
     # obtaining data from the right mid box
     # - Principal, Addresses, Tel, Links to school's website
-    for p_tags in soup.find('div', class_='box border-grey').findAll('p'):
-        links = p_tags.findAll('a')
+    for p_tags in soup.find('div', class_='box border-grey').find_all('p'):
+        links = p_tags.find_all('a')
         for a in links:
-            if a.getText() == "Visit school's website":
+            if a.get_text() == "Visit school's website":
                 complete_school_details["Visit school's website"] = a['href']
 
-        cleaned_text = p_tags.getText().replace("\n", "")
+        cleaned_text = p_tags.get_text().replace("\n", "")
         sorted_text = cleaned_text.split(":")
         if len(sorted_text) == 2:
             complete_school_details[sorted_text[0].lstrip().rstrip()] = sorted_text[1].lstrip().rstrip()
@@ -115,12 +115,23 @@ def collect_institution_data(str_institution_link):
         print(complete_school_details['Institution Name'] + " has multiple profiles")
         multiple_profiles.append(complete_school_details['Institution Name'])
         del complete_school_details['School Profile']
-    print(complete_school_details)
+    # print(complete_school_details)
+
+    # about us tab
+    about_us_list = []
+    y = soup.find('div', class_='tab-pane active').find_all('p',  recursive=False)
+    for p_tags in y:
+        #p_tags.get_text()
+        about_us_list.append(p_tags.get_text().replace("\n", "").replace("\t", ""))
+    print(about_us_list)
+
+# https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
+# https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
 
 
 if __name__ == '__main__':
     # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Hawthorn-3122/scotch-college-hawthorn/boarding")
+    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school")
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
