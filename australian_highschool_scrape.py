@@ -26,10 +26,10 @@ Homepage = 'https://www.goodschools.com.au'
 user = UserAgent().random
 headers = {'User-Agent': user}
 
-#obtaining links for all the institutions by region
-def collect_institution_links(str_link):
 
-    with open(uniqueLinkList_path, 'wt',encoding='utf-8', newline='') as Linklist:
+# obtaining links for all the institutions by region
+def collect_institution_links(str_link):
+    with open(uniqueLinkList_path, 'wt', encoding='utf-8', newline='') as Linklist:
         writer2 = csv.writer(Linklist)
         options.add_argument(f'user-agent={user}')
         options.add_argument('--disable-gpu')
@@ -58,7 +58,7 @@ def collect_institution_links(str_link):
                 break
 
 
-#multiprocessing structure
+# multiprocessing structure
 def multi_pool(func, input_name_list, procs):
     templist = []
     # counter = len(input_name_list)
@@ -72,21 +72,31 @@ def multi_pool(func, input_name_list, procs):
     return templist
 
 
-#retrieving all relevant information from the institution's profile page
+multiple_profiles = []
+
+
+# retrieving all relevant information from the institution's profile page
 def collect_institution_data(str_institution_link):
     complete_school_details = {}
+    global multiple_profiles
     page = requests.get(str_institution_link)
     soup = BeautifulSoup(page.content, 'lxml')
 
-    # begin by obtaining data from the top right box
+    # begin by getting institution name and region
+    header_texts = soup.find('div', class_='school-details').find('div', class_='header').get_text()
+    str_list = header_texts.split("\n")
+    cleaned_h_texts = list(filter(None, str_list))
+    complete_school_details['Institution Name'] = cleaned_h_texts[0].lstrip().rstrip()
+    complete_school_details['Institution Region'] = cleaned_h_texts[1].lstrip().rstrip()
+
+    # proceed to obtain data from the top right box
     # - Sector, Government, Gender, Religion (found in some listings)
     for p_tags in soup.find('div', class_='box-content box-section-padding').findAll('p'):
         cleaned_text = p_tags.getText().replace(" ", "").replace("\n", "")
         sorted_text = re.findall('([A-Z][a-z]*)', cleaned_text)
         complete_school_details[sorted_text[0]] = sorted_text[1]
 
-
-    #obtaining data from the right mid box
+    # obtaining data from the right mid box
     # - Principal, Addresses, Tel, Links to school's website
     for p_tags in soup.find('div', class_='box border-grey').findAll('p'):
         links = p_tags.findAll('a')
@@ -94,17 +104,23 @@ def collect_institution_data(str_institution_link):
             if a.getText() == "Visit school's website":
                 complete_school_details["Visit school's website"] = a['href']
 
-        cleaned_text = p_tags.getText() .replace("\n", "")
+        cleaned_text = p_tags.getText().replace("\n", "")
         sorted_text = cleaned_text.split(":")
         if len(sorted_text) == 2:
-            complete_school_details[sorted_text[0]] = sorted_text[1].lstrip().rstrip()
+            complete_school_details[sorted_text[0].lstrip().rstrip()] = sorted_text[1].lstrip().rstrip()
 
+    #  check if school has multiple profiles
+    #  - https://www.goodschools.com.au/compare-schools/in-Hawthorn-3122/scotch-college-hawthorn/boarding
+    if "School Profile" in complete_school_details.keys():
+        print(complete_school_details['Institution Name'] + " has multiple profiles")
+        multiple_profiles.append(complete_school_details['Institution Name'])
+        del complete_school_details['School Profile']
     print(complete_school_details)
 
 
+if __name__ == '__main__':
+    # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
+    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Hawthorn-3122/scotch-college-hawthorn/boarding")
 
-
-#collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-
-
-#collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Yangan-4371/yangan-state-school")
+    if len(multiple_profiles):
+        print("These are the institutions with multiple profiles " + str(multiple_profiles))
