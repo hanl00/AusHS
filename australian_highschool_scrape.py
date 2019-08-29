@@ -16,9 +16,9 @@ uniqueLinkList_path = os.path.join(os.getcwd(), 'UniqueLinkList.csv')
 extractedData_path = os.path.join(os.getcwd(), 'ExtractedData.csv')
 
 # Setup Chrome display
-# options = webdriver.ChromeOptions()
-# options.add_argument('--ignore-certificate-errors')
-# options.add_argument("--test-type")
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument("--test-type")
 
 #  Change according to the homepage of the site
 Homepage = 'https://www.goodschools.com.au'
@@ -31,26 +31,30 @@ def collect_institution_links(str_link):
 
     with open(uniqueLinkList_path, 'wt',encoding='utf-8', newline='') as Linklist:
         writer2 = csv.writer(Linklist)
-        search_result_page = requests.get(str_link)  # This will open the page using the URL
+        options.add_argument(f'user-agent={user}')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--headless')
+        driver = webdriver.Chrome(options=options,
+                                  executable_path=r'C:\Users\Nicholas\Documents\Summer intern @ Seeka\chromedriver.exe')
 
+        driver.get(str_link)
         total_link_info = ['']
 
         while True:
-
-            soup = BeautifulSoup(search_result_page.content, 'lxml')
+            soup = BeautifulSoup(driver.page_source, 'lxml')
             for a in soup.find_all('div', class_='row row-padding-10'):
                 for x in a.find_all('div', class_='col-md-12 clear-fix'):
                     b = x.find('a')
-                    print(b['href'])
                     institution_link = Homepage + b['href']
                     total_link_info[0] = institution_link
                     writer2.writerow(total_link_info)
                     time.sleep(1)
             try:
                 driver.find_element_by_link_text('»').click()
-                print("Clicked on the next page")
+                print("Moving on to the next page")
                 continue
             except:
+                print("This is the last page")
                 break
 
 
@@ -100,7 +104,7 @@ def collect_institution_data(str_institution_link):
 
 
 
+#collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
 
 
-
-collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Yangan-4371/yangan-state-school")
+#collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Yangan-4371/yangan-state-school")
