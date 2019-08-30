@@ -167,19 +167,22 @@ def collect_institution_data(str_institution_link):
         final_curriculum_list = list(filter(None, final_curriculum_list))
         complete_school_details[final_curriculum_list[0]] = final_curriculum_list[1:]
     except:
-        print("Our Curriculum section not found")
+        #print("Our Curriculum section not found")
         pass
 
-    # TO BE REVISITED LATER
-    # about us - ACTIVITIES & SUPPORT STAFF
-    activities_info = soup.find('div', class_='margin-25').find_all('div', class_='row')
-    a_s_list = []
-    list_2 = []
-    activities_info = activities_info[3:]
-    for word in activities_info:
-        a_s_list.append(word.get_text())
-    # for info in a_s_list:
-    # print(info.replace("\n", "").replace("\t", "").lstrip().rstrip())
+    try:
+        # TO BE REVISITED LATER
+        # about us - ACTIVITIES & SUPPORT STAFF
+        activities_info = soup.find('div', class_='margin-25').find_all('div', class_='row')
+        a_s_list = []
+        list_2 = []
+        activities_info = activities_info[3:]
+        for word in activities_info:
+            a_s_list.append(word.get_text())
+        # for info in a_s_list:
+        # print(info.replace("\n", "").replace("\t", "").lstrip().rstrip())
+    except:
+        pass
 
     # Look for the navigation tab
     navigation_tab_tags = soup.find('ul', class_='orange-nav-tabs nav nav-tabs').find_all('a')
@@ -199,14 +202,20 @@ def collect_institution_data(str_institution_link):
             y = soup_fee.find('div', class_='tab-pane active')  # .find_all('p', recursive=False)
             complete_school_details['Fees'] = y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip()
 
-        #if tab_name == ""
-
+        if tab_name == "Scholarship":
+            scholarship_link = tab['href']
+            scholarship_page = requests.get(scholarship_link)
+            soup_scholarship = BeautifulSoup(scholarship_page.content,'lxml')
+            y = soup_scholarship.find('div', class_='tab-pane active')
+            y.p.decompose()
+            #print(y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip())
+            print(y)
 
 
 
     #cleaned_activites_info = list(filter(None, activities_info.get_text().splitlines()))
 
-    print(complete_school_details)
+    #print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
@@ -216,7 +225,7 @@ def collect_institution_data(str_institution_link):
 
 if __name__ == '__main__':
     # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-ManlyWest-4179/moreton-bay-boys-college")
+    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Ascot-4007/st-margarets-anglican-girls-school/scholarships")
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
