@@ -185,21 +185,28 @@ def collect_institution_data(str_institution_link):
     navigation_tab_tags = soup.find('ul', class_='orange-nav-tabs nav nav-tabs').find_all('a')
     for tab in navigation_tab_tags:
         tab_name = tab.get_text()
-        print(tab_name)
         if tab_name == "Inside Scoop":
             inside_scoop_link = tab['href']
+            inside_scoop_page = requests.get(inside_scoop_link)
+            soup_inside_scoop = BeautifulSoup(inside_scoop_page.content, 'lxml')
+            y = soup_inside_scoop.find('div', class_='tab-pane active') #.find_all('p', recursive=False)
+            complete_school_details['Inside Scoop'] = y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip()
 
-        if tab_name == 'Fees':  # obtaining fee link
+        if tab_name == "Fees":  # obtaining fee link
             fee_link = tab['href']
+            fee_page = requests.get(fee_link)
+            soup_fee = BeautifulSoup(fee_page.content, 'lxml')
+            y = soup_fee.find('div', class_='tab-pane active')  # .find_all('p', recursive=False)
+            complete_school_details['Fees'] = y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip()
 
-        if tab_name == ''
+        #if tab_name == ""
 
 
 
 
     #cleaned_activites_info = list(filter(None, activities_info.get_text().splitlines()))
 
-    #print(complete_school_details)
+    print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
