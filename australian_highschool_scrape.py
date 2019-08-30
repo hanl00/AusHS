@@ -131,20 +131,24 @@ def collect_institution_data(str_institution_link):
     complete_school_details['About Us'] = about_us_string
 
     # about us - KEY FACTS section
-    key_facts_list = []
+    # key_facts_list = []
     w = soup.find_all('div', class_='col-md-4 col-sm-4 col-xs-6 text-align-center')
     actual_list = w[:len(w)//2]
     for facts in actual_list:
+        key_facts_list = []
         cleaned_text = facts.get_text().splitlines()
         words = list(filter(None, cleaned_text))
-        #perform l and rstrip
-        if len(words)>2:
-            num_students_list = ". ".join(words[1:])
-            print(num_students_list)
+        for word in words:
+            key_facts_list.append(word.lstrip().rstrip())
+        final_fact_list = list(filter(None, key_facts_list))
+        if len(final_fact_list) == 2:
+            complete_school_details[final_fact_list[0]] = final_fact_list[1]
+        if len(final_fact_list) > 2:
+            complete_school_details[final_fact_list[0]] = final_fact_list[1:]
+        if len(final_fact_list) == 1:
+            complete_school_details[final_fact_list[0]] = "Cant retrieve data from site"
 
-        print(words)
-
-    #print(complete_school_details)
+    print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
@@ -154,7 +158,7 @@ def collect_institution_data(str_institution_link):
 
 if __name__ == '__main__':
     # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Brisbane-4000/all-hallows-school")
+    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school")
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
