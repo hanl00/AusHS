@@ -4,7 +4,8 @@ import os
 import re
 import time
 import timeit
-
+import pandas as pd
+# install xlrd
 import requests
 from bs4 import BeautifulSoup, Tag, NavigableString
 from fake_useragent import UserAgent
@@ -79,7 +80,7 @@ multiple_profiles = []
 def collect_institution_data(str_institution_link):
     complete_school_details = {}
     global multiple_profiles
-    page = requests.get(str_institution_link)
+    page = requests.get(str_institution_link[0])
     soup = BeautifulSoup(page.content, 'lxml')
 
     # begin by getting institution name and region
@@ -115,7 +116,6 @@ def collect_institution_data(str_institution_link):
         print(complete_school_details['Institution Name'] + " has multiple profiles")
         multiple_profiles.append(complete_school_details['Institution Name'])
         del complete_school_details['School Profile']
-    # print(complete_school_details)
 
     # about us tab
     about_us_list = []
@@ -167,21 +167,6 @@ def collect_institution_data(str_institution_link):
         final_curriculum_list = list(filter(None, final_curriculum_list))
         complete_school_details[final_curriculum_list[0]] = final_curriculum_list[1:]
     except:
-        #print("Our Curriculum section not found")
-        pass
-
-    try:
-        # TO BE REVISITED LATER
-        # about us - ACTIVITIES & SUPPORT STAFF
-        activities_info = soup.find('div', class_='margin-25').find_all('div', class_='row')
-        a_s_list = []
-        list_2 = []
-        activities_info = activities_info[3:]
-        for word in activities_info:
-            a_s_list.append(word.get_text())
-        # for info in a_s_list:
-        # print(info.replace("\n", "").replace("\t", "").lstrip().rstrip())
-    except:
         pass
 
     # Look for the navigation tab
@@ -192,7 +177,7 @@ def collect_institution_data(str_institution_link):
             inside_scoop_link = tab['href']
             inside_scoop_page = requests.get(inside_scoop_link)
             soup_inside_scoop = BeautifulSoup(inside_scoop_page.content, 'lxml')
-            y = soup_inside_scoop.find('div', class_='tab-pane active') #.find_all('p', recursive=False)
+            y = soup_inside_scoop.find('div', class_='tab-pane active')
             complete_school_details['Inside Scoop'] = y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip()
 
         if tab_name == "Fees":  # obtaining fee link
@@ -209,26 +194,17 @@ def collect_institution_data(str_institution_link):
             soup_scholarship = BeautifulSoup(scholarship_page.content,'lxml')
             y = soup_scholarship.find('div', class_='tab-pane active')
             y.p.decompose()
-            # info_scholarship_cleaned = list(filter(None, y.get_text().splitlines())).replace("\n", "")
-            #print(y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip())
             info_scholarship_cleaned = list(filter(None, y.get_text().splitlines()))
-            #for x in info_scholarship_cleaned:
-             #   if x == "        ":
-             #       print("true")
-            #k = [x.replace(' ', '') for x in info_scholarship_cleaned]
+
             for x in info_scholarship_cleaned:
                 y = x.replace("\n", " ").replace("\t", "").lstrip().rstrip()
                 final_scholarship_list.append(y)
             final_scholarship_list =  list(filter(None, final_scholarship_list))
-            complete_school_details["Scholarship details"] =  final_scholarship_list
+            complete_school_details["Scholarship details"] = final_scholarship_list
 
+    print("Completed " + str_institution_link[0])
+    return complete_school_details
 
-
-
-
-    #cleaned_activites_info = list(filter(None, activities_info.get_text().splitlines()))
-
-    print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
@@ -237,8 +213,34 @@ def collect_institution_data(str_institution_link):
 # https://www.goodschools.com.au/compare-schools/in-ManlyWest-4179/moreton-bay-boys-college
 
 if __name__ == '__main__':
+
+    #with open("scriptInput.txt", "rt") as input_lines:
+    #    for x in input_lines:
+    #        collect_institution_links(x)
+
+    #with open(uniqueLinkList_path, 'rt', encoding='utf-8', newline='') as institution_links:
+
     # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Ascot-4007/st-margarets-anglican-girls-school/scholarships")
+    #dict = collect_institution_data("https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school")
+
+    rawdata = pd.read_csv(uniqueLinkList_path)
+    institution_links = rawdata.values.tolist()
+
+    all_data = multi_pool(collect_institution_data, institution_links, 5)
+    #print(all_data)
+    
+    #columns = ['Institution Name', 'Institution Region', 'Sector', 'Level', 'Gender', 'Religion', 'Principal', 'Addresses', 'Tel', "Visit school's website", 'About Us', 'Fees', 'Scholarship details']
+    #with open('institution_data.csv', 'wt', newline='') as f:
+    #    w = csv.writer(f)
+    #    print("Writing to csv file now")
+    #    w.writerow(columns)
+    #    for a in all_data:
+     #       w.writerow(a)
+        #    w.writerow([dict.get(col, None) for col in columns])
+
+    #print("buffer")
+    #print(all_data)
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
+
