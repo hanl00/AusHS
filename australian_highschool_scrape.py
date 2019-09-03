@@ -30,6 +30,7 @@ headers = {'User-Agent': user}
 
 # obtaining links for all the institutions by region
 def collect_institution_links(str_link):
+    print("opening unique link list file")
     with open(uniqueLinkList_path, 'wt', encoding='utf-8', newline='') as Linklist:
         writer2 = csv.writer(Linklist)
         options.add_argument(f'user-agent={user}')
@@ -40,7 +41,7 @@ def collect_institution_links(str_link):
 
         driver.get(str_link)
         total_link_info = ['']
-
+        print("driver done, getting page source")
         while True:
             soup = BeautifulSoup(driver.page_source, 'lxml')
             for a in soup.find_all('div', class_='row row-padding-10'):
@@ -202,7 +203,11 @@ def collect_institution_data(str_institution_link):
             final_scholarship_list =  list(filter(None, final_scholarship_list))
             complete_school_details["Scholarship details"] = final_scholarship_list
 
-    print("Completed " + str_institution_link[0])
+    #print("Completed " + str_institution_link[0])
+    if len(complete_school_details.keys()) > 14:
+        print(str_institution_link)
+        print(complete_school_details.keys())
+        print(len(complete_school_details.keys()))
     return complete_school_details
 
 
@@ -214,32 +219,27 @@ def collect_institution_data(str_institution_link):
 
 if __name__ == '__main__':
 
-    #with open("scriptInput.txt", "rt") as input_lines:
-    #    for x in input_lines:
-    #        collect_institution_links(x)
+    print("start")
+    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=SA")
+    print("begin collecting institution data")
 
     #with open(uniqueLinkList_path, 'rt', encoding='utf-8', newline='') as institution_links:
-
-    # collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
-    #dict = collect_institution_data("https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school")
 
     rawdata = pd.read_csv(uniqueLinkList_path)
     institution_links = rawdata.values.tolist()
 
-    all_data = multi_pool(collect_institution_data, institution_links, 5)
-    #print(all_data)
-    
-    #columns = ['Institution Name', 'Institution Region', 'Sector', 'Level', 'Gender', 'Religion', 'Principal', 'Addresses', 'Tel', "Visit school's website", 'About Us', 'Fees', 'Scholarship details']
-    #with open('institution_data.csv', 'wt', newline='') as f:
-    #    w = csv.writer(f)
-    #    print("Writing to csv file now")
-    #    w.writerow(columns)
-    #    for a in all_data:
-     #       w.writerow(a)
-        #    w.writerow([dict.get(col, None) for col in columns])
+    columns = ['Institution Name', 'Institution Region', 'Sector', 'Level', 'Gender', 'Principal', 'Addresses',
+               "Visit school's website", 'About Us', 'School uniform', 'Number of students', 'Boarding school',
+               'Offer IB', 'Accepts international students', 'Subjects overview', 'Inside Scoop', 'Fees', 'Scholarship']
 
-    #print("buffer")
-    #print(all_data)
+    all_data = multi_pool(collect_institution_data, institution_links, 5)
+
+    print("Writing to csv file now")
+    with open('institution_data.csv', 'wt', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(columns)
+        for items in all_data:
+            w.writerow([items.get(col, None) for col in columns])
 
     if len(multiple_profiles):
         print("These are the institutions with multiple profiles " + str(multiple_profiles))
