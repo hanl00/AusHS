@@ -203,19 +203,32 @@ def collect_institution_data(str_institution_link):
             complete_school_details['Fees'] = y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip()
 
         if tab_name == "Scholarship":
+            final_scholarship_list = []
             scholarship_link = tab['href']
             scholarship_page = requests.get(scholarship_link)
             soup_scholarship = BeautifulSoup(scholarship_page.content,'lxml')
             y = soup_scholarship.find('div', class_='tab-pane active')
             y.p.decompose()
+            # info_scholarship_cleaned = list(filter(None, y.get_text().splitlines())).replace("\n", "")
             #print(y.get_text().replace("\n", " ").replace("\t", "").lstrip().rstrip())
-            print(y)
+            info_scholarship_cleaned = list(filter(None, y.get_text().splitlines()))
+            #for x in info_scholarship_cleaned:
+             #   if x == "        ":
+             #       print("true")
+            #k = [x.replace(' ', '') for x in info_scholarship_cleaned]
+            for x in info_scholarship_cleaned:
+                y = x.replace("\n", " ").replace("\t", "").lstrip().rstrip()
+                final_scholarship_list.append(y)
+            final_scholarship_list =  list(filter(None, final_scholarship_list))
+            complete_school_details["Scholarship details"] =  final_scholarship_list
+
+
 
 
 
     #cleaned_activites_info = list(filter(None, activities_info.get_text().splitlines()))
 
-    #print(complete_school_details)
+    print(complete_school_details)
 
 # https://www.goodschools.com.au/compare-schools/in-Claremont-7011/austins-ferry-primary-school
 # https://www.goodschools.com.au/compare-schools/in-WaveHill-852/kalkaringi-school
