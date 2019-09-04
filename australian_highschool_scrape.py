@@ -89,7 +89,11 @@ def collect_institution_data(str_institution_link):
     str_list = header_texts.split("\n")
     cleaned_h_texts = list(filter(None, str_list))
     complete_school_details['Institution Name'] = cleaned_h_texts[0].lstrip().rstrip()
-    complete_school_details['Institution Region'] = cleaned_h_texts[1].lstrip().rstrip()
+    try:
+        complete_school_details['Institution Region'] = cleaned_h_texts[1].lstrip().rstrip()
+    except IndexError:
+        complete_school_details['Institution Region'] = 0
+        pass
 
     # proceed to obtain data from the top right box
     # - Sector, Government, Gender, Religion (found in some listings)
@@ -220,7 +224,7 @@ def collect_institution_data(str_institution_link):
 if __name__ == '__main__':
 
     print("start")
-    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=SA")
+    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=QLD")
     print("begin collecting institution data")
 
     #with open(uniqueLinkList_path, 'rt', encoding='utf-8', newline='') as institution_links:
