@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup, Tag, NavigableString
 from fake_useragent import UserAgent
 from selenium import webdriver
 from unidecode import unidecode
+from urllib.request import urlopen
 
 # dynamic pathname based on different device, instead of hard coding the pathname
 uniqueLinkList_path = os.path.join(os.getcwd(), 'UniqueLinkList.csv')
@@ -94,6 +95,31 @@ def collect_institution_data(str_institution_link):
     except IndexError:
         complete_school_details['Institution Region'] = 0
         pass
+
+    # save all image
+    logo = soup.find('div', class_="header").find_all('img')
+    div = soup.find_all('img', class_="sp-thumbnail-image")
+    pic_list = []
+    not_empty = True
+
+    if not logo:
+        if not div:
+            not_empty = False
+
+    if not_empty:
+        institution_image_folder_path = os.path.join(os.getcwd(), 'Images')
+        pic_list = logo + div
+        i = 0
+        for items in pic_list:
+            #print(items)
+            image_source = items['src']
+            image = requests.get(image_source)
+            institution_image_path = os.path.join(os.path.abspath(institution_image_folder_path), str(complete_school_details['Institution Name']) + "_Image_" + str(i) + ".jpg")
+            #print(institution_image_path)
+            with open(institution_image_path, "wb") as f:
+                f.write(image.content)
+                i = i + 1
+
 
     # proceed to obtain data from the top right box
     # - Sector, Government, Gender, Religion (found in some listings)
@@ -207,11 +233,46 @@ def collect_institution_data(str_institution_link):
             final_scholarship_list =  list(filter(None, final_scholarship_list))
             complete_school_details["Scholarship details"] = final_scholarship_list
 
-    #print("Completed " + str_institution_link[0])
-    if len(complete_school_details.keys()) > 14:
-        print(str_institution_link)
-        print(complete_school_details.keys())
-        print(len(complete_school_details.keys()))
+    if 'Head of School' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Head of School')
+
+    if 'Headmaster' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Headmaster')
+
+    if 'Acting Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Acting Principal')
+
+    if 'Relieving Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Relieving Principal')
+
+    if 'College Director' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('College Director')
+
+    if 'College Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('College Principal')
+
+    if 'Executive Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Executive Principal')
+
+    if 'Co-Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Co-Principal')
+
+    if 'School Principal' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('School Principal')
+
+    if 'School Coordinator' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('School Coordinator')
+
+    if 'School Head Teacher' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('School Head Teacher')
+
+    if 'Principal/CEO' in complete_school_details:
+        complete_school_details['Principal'] = complete_school_details.pop('Principal/CEO')
+
+    if 'Principal' not in complete_school_details:
+        print("Error for school ", complete_school_details)
+
+
     return complete_school_details
 
 
@@ -223,9 +284,9 @@ def collect_institution_data(str_institution_link):
 
 if __name__ == '__main__':
 
-    print("start")
-    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NSW")
-    print("begin collecting institution data")
+    #print("start")
+    #collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NT")
+    #print("begin collecting institution data")
 
     #with open(uniqueLinkList_path, 'rt', encoding='utf-8', newline='') as institution_links:
 
@@ -236,7 +297,9 @@ if __name__ == '__main__':
                "Visit school's website", 'About Us', 'School uniform', 'Number of students', 'Boarding school',
                'Offer IB', 'Accepts international students', 'Subjects overview', 'Inside Scoop', 'Fees', 'Scholarship']
 
-    all_data = multi_pool(collect_institution_data, institution_links, 5)
+    all_data = multi_pool(collect_institution_data, institution_links, 6)
+
+    #all_data = collect_institution_data("https://www.goodschools.com.au/compare-schools/in-Fitzroy-3065/academy-of-mary-immaculate/our-story")
 
     print("Writing to csv file now")
     with open('institution_data.csv', 'wt', newline='') as f:
