@@ -224,7 +224,7 @@ def collect_institution_data(str_institution_link):
 if __name__ == '__main__':
 
     print("start")
-    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=QLD")
+    collect_institution_links("https://www.goodschools.com.au/compare-schools/search?state=NSW")
     print("begin collecting institution data")
 
     #with open(uniqueLinkList_path, 'rt', encoding='utf-8', newline='') as institution_links:
